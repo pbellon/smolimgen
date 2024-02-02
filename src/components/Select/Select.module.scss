@@ -1,0 +1,13 @@
+.wrapper {
+  position: relative;
+
+  select {
+    appearance: none;
+  }
+
+  &::after {
+    content: '⏷';
+    position: absolute;
+    right: 0.1rem;
+  }
+}

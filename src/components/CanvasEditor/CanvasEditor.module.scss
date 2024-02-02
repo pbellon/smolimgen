@@ -1,0 +1,26 @@
+.controls {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: start;
+  align-items: stretch;
+}
+
+.editor {
+  display: grid;
+  grid-template-rows: 1fr minmax(1fr, max-content);
+  align-items: center;
+  justify-content: center;
+  row-gap: 1rem;
+}
+
+.stage {
+  display: flex;
+  justify-content: center;
+}
+
+.font-family {
+  option[value] {
+    font-family: attr(value string);
+  }
+}
