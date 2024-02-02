@@ -1,10 +1,7 @@
 import { saveAs } from 'file-saver';
 import type { Stage as KStage } from 'konva/lib/Stage';
 import { FC, useRef, useState } from 'react';
-import { Layer, Rect, Stage, Text } from 'react-konva/lib/ReactKonvaCore';
-// load required shapes
-import 'konva/lib/shapes/Rect';
-import 'konva/lib/shapes/Text';
+import { Layer, Stage } from 'react-konva/lib/ReactKonvaCore';
 
 import { Field } from '@components/Field';
 import { Select } from '@components/Select';
@@ -14,55 +11,63 @@ import {
 } from '@utils/valuesToSelectOptions';
 
 import styles from './CanvasEditor.module.scss';
+import { CanvasShape } from './CanvasShape';
+import { CanvasShapesMenu } from './CanvasShapesMenu';
+import { CanvasEditorState, EditorShape, FontFamily } from './types';
+import { drawWatermark } from './utils/drawWatermark';
 
-type Align = 'center' | 'left' | 'right';
-
-const alignValues: Align[] = ['center', 'left', 'right'];
-const alignOptions = alignValues.map(value => {
-  return {
-    ...valueToSelectOption(value),
-    text: value
-  };
-});
-
-const fontFamilyOptions = valuesToSelectOptions([
-  'Monospace',
-  'Verdana',
-  'Tahoma',
-  'Georgia',
-  'Arial',
-  'Arial Black',
-  'sans-serif',
-  'serif',
-  'Calibri',
-  'Times New Roman'
-]).map(opt => ({
-  ...opt,
-  style: {
-    fontFamily: opt.value
-  }
-}));
-
-const drawWatermark = (
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  fontSize: number,
-  width: number,
-  height: number
-): void => {
-  ctx.save(); // Save current state
-  ctx.font = `${fontSize}px Arial`;
-  ctx.fillStyle = 'grey';
-  ctx.globalAlpha = 0.5;
-  const { width: textWidth } = ctx.measureText(text);
-  const x = width - textWidth - 10;
-  const y = height - fontSize - 10;
-  ctx.fillText(text, x, y);
-  ctx.restore(); // Restore original state
+type CanvasEditorProps = {
+  width?: number;
+  height?: number;
 };
 
-export const CanvasEditor: FC = () => {
+export const CanvasEditor: FC<CanvasEditorProps> = ({
+  width = 500,
+  height = 500
+}) => {
   const stageRef = useRef(null);
+
+  const [editorState, setEditorState] = useState<CanvasEditorState>(() => ({
+    name: 'My canvas',
+    height,
+    width,
+    shapes: [
+      {
+        id: '0',
+        type: 'rect',
+        width,
+        height,
+        fill: '#bbbbbb',
+        x: 0,
+        y: 0
+      },
+      {
+        id: '1',
+        align: 'center',
+        type: 'text',
+        x: 0,
+        y: 0,
+        width,
+        height,
+        text: 'Some Text',
+        fontFamily: FontFamily.ARIAL,
+        fontSize: 24,
+        fill: '#333333'
+      }
+    ]
+  }));
+
+  const handleShapeUpdate = (newShape: EditorShape): void => {
+    setEditorState(prevEditorState => ({
+      ...prevEditorState,
+      shapes: prevEditorState.shapes.map(shape => {
+        if (shape.id === newShape.id) {
+          return newShape;
+        }
+        return shape;
+      })
+    }));
+  };
 
   const [name, setName] = useState('My canvas');
   const [bgColor, setBgColor] = useState('#bbbbbb');
@@ -100,62 +105,29 @@ export const CanvasEditor: FC = () => {
         <button type="button" disabled={!stageRef.current} onClick={handleSave}>
           📥 Save
         </button>
-        <Field label="Background color" htmlFor="bgColor">
-          <input
-            id="bgColor"
-            type="color"
-            value={bgColor}
-            onChange={e => {
-              const newValue = e.target.value;
-              console.log({ newValue });
-              setBgColor(e.target.value);
-            }}
-          />
-        </Field>
-        <Field label="Text align" htmlFor="textAlign">
-          <Select
-            id="textAlign"
-            value={align}
-            options={alignOptions}
-            onChange={e => setAlign(e.target.value)}
-          />
-        </Field>
-        <Field label="Font size" htmlFor="fontSize">
-          <input
-            id="fontSize"
-            type="number"
-            value={fontSize}
-            onChange={e => setFontSize(parseInt(e.target.value, 10))}
-          />
-        </Field>
-        <Field label="Font color" htmlFor="fontColor">
-          <input
-            type="color"
-            id="fontColor"
-            value={fontColor}
-            onChange={e => setFontColor(e.target.value)}
-          />
-        </Field>
-        <Field label="Text" htmlFor="text">
-          <textarea
-            id="text"
-            value={text}
-            onChange={e => setText(e.target.value)}
-          />
-        </Field>
-        <Field label="Font family" htmlFor="fontFamily">
-          <Select
-            className={styles['font-family']}
-            id="fontFamily"
-            value={fontFamily}
-            onChange={e => setFontFamily(e.target.value)}
-            options={fontFamilyOptions}
-          />
-        </Field>
       </div>
-      <Stage className={styles.stage} width={500} height={500} ref={stageRef}>
-        <Layer>
+      <div className={styles.shapes}>
+        <CanvasShapesMenu
+          shapes={editorState.shapes}
+          onShapeUpdate={handleShapeUpdate}
+        />
+      </div>
+      <Stage
+        className={styles.stage}
+        width={editorState.width}
+        height={editorState.height}
+        ref={stageRef}
+      >
+        {editorState.shapes.map(shape => (
+          <Layer key={shape.id}>
+            <CanvasShape shape={shape} />
+          </Layer>
+        ))}
+
+        {/* <Layer>
           <Rect fill={bgColor} x={0} y={0} width={500} height={500}></Rect>
+        </Layer>
+        <Layer>
           <Text
             wrap="word"
             width={500}
@@ -166,7 +138,7 @@ export const CanvasEditor: FC = () => {
             align={align}
             draggable
           />
-        </Layer>
+        </Layer> */}
       </Stage>
     </div>
   );

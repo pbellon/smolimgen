@@ -1,0 +1,10 @@
+.menu {
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}

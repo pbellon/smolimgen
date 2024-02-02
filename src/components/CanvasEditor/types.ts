@@ -1,34 +1,36 @@
-export enum FontFamily {}
+export enum FontFamily {
+  ARIAL = 'Arial'
+}
 
-export type TextShape = {
-  value: string;
-  width: number;
-  height: number;
+export type BaseShape<Type extends string> = {
+  type: Type;
+  id: string;
   x: number;
   y: number;
+  height: number;
+  width: number;
+};
+
+export type TextShape = BaseShape<'text'> & {
+  align: string;
+  fill: string;
   fontFamily: FontFamily;
+  fontSize: number;
+  text: string;
 };
 
-export type ImageShape = {
-  width: number;
-  height: number;
-  x: number;
-  y: number;
-  data: string;
+export type ImageShape = BaseShape<'image'> & {
+  image: CanvasImageSource;
 };
 
-export type RectShape = {
-  width: number;
-  height: number;
-  x: number;
-  y: number;
+export type RectShape = BaseShape<'rect'> & {
   fill: string;
 };
 
-export type Shape = RectShape | TextShape | ImageShape;
+export type EditorShape = RectShape | TextShape | ImageShape;
 
 export type CanvasEditorState = {
-  shapes: Shape[];
+  shapes: EditorShape[];
   name: string;
   width: number;
   height: number;

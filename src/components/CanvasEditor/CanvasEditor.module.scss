@@ -4,17 +4,28 @@
   flex-wrap: wrap;
   justify-content: start;
   align-items: stretch;
+  grid-area: a;
 }
 
 .editor {
   display: grid;
-  grid-template-rows: 1fr minmax(1fr, max-content);
+  grid-template-areas:
+    'a a a a'
+    'b c c c'
+    'b c c c';
+  // grid-template-rows: 1fr minmax(1fr, max-content);
   align-items: center;
   justify-content: center;
   row-gap: 1rem;
 }
 
+.shapes {
+  grid-area: b;
+  max-width: 500px;
+}
+
 .stage {
+  grid-area: c;
   display: flex;
   justify-content: center;
 }
