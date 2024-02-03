@@ -2,13 +2,11 @@ import { FC } from 'react';
 import { Image } from 'react-konva/lib/ReactKonvaCore';
 import 'konva/lib/shapes/Image';
 
-import { ImageShape } from '../types';
+import { ImageShape, ShapePropsWithSelection } from '../types';
 
-type ImageShapeProps = {
-  shape: ImageShape;
-};
-
-export const CanvasImageShape: FC<ImageShapeProps> = ({ shape }) => {
+export const CanvasImageShape: FC<ShapePropsWithSelection<ImageShape>> = ({
+  shape
+}) => {
   console.log({ shape });
 
   return (

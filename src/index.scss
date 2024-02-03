@@ -2,8 +2,13 @@
   // variables
   --main-font-color: rgba(255, 255, 255, 0.87);
   --background-color: #242424;
+  --accent-color: #646cff;
+
   --border-radius: 0.2rem;
-  --border-color-active: #646cff;
+  --border-color-active: var(--accent-color);
+
+  --spacing-small: 0.7rem;
+  --spacing-medium: 1rem;
 }
 
 body {

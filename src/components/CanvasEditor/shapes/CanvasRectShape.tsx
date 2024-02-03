@@ -1,18 +1,22 @@
 import 'konva/lib/shapes/Rect';
+import type { KonvaEventObject } from 'konva/lib/Node';
 import { FC } from 'react';
 import { Rect } from 'react-konva/lib/ReactKonvaCore';
 
-import { RectShape } from '../types';
+import { RectShape, ShapePropsWithSelection } from '../types';
 
-type RectShapeProps = {
-  shape: RectShape;
-};
-
-export const CanvasRectShape: FC<RectShapeProps> = ({ shape }) => {
+export const CanvasRectShape: FC<
+  ShapePropsWithSelection<RectShape> & {
+    onClick?: (e: KonvaEventObject<MouseEvent>) => void;
+  }
+> = ({ shape, onClick }) => {
   console.log({ shape });
 
   return (
     <Rect
+      onClick={e => {
+        onClick?.(e);
+      }}
       width={shape.width}
       height={shape.height}
       fill={shape.fill}

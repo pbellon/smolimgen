@@ -1,18 +1,14 @@
 import { saveAs } from 'file-saver';
+import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Stage as KStage } from 'konva/lib/Stage';
-import { FC, useRef, useState } from 'react';
+import { ChangeEventHandler, FC, useCallback, useRef, useState } from 'react';
 import { Layer, Stage } from 'react-konva/lib/ReactKonvaCore';
 
 import { Field } from '@components/Field';
-import { Select } from '@components/Select';
-import {
-  valueToSelectOption,
-  valuesToSelectOptions
-} from '@utils/valuesToSelectOptions';
 
 import styles from './CanvasEditor.module.scss';
-import { CanvasShape } from './CanvasShape';
-import { CanvasShapesMenu } from './CanvasShapesMenu';
+import { CanvasShapeMenu } from './menu';
+import { CanvasShape } from './shapes/CanvasShape';
 import { CanvasEditorState, EditorShape, FontFamily } from './types';
 import { drawWatermark } from './utils/drawWatermark';
 
@@ -29,20 +25,19 @@ export const CanvasEditor: FC<CanvasEditorProps> = ({
 
   const [editorState, setEditorState] = useState<CanvasEditorState>(() => ({
     name: 'My canvas',
-    height,
-    width,
+    size: {
+      height,
+      width
+    },
+    selectedShapeId: undefined,
     shapes: [
       {
-        id: '0',
-        type: 'rect',
-        width,
-        height,
-        fill: '#bbbbbb',
-        x: 0,
-        y: 0
+        id: crypto.randomUUID(),
+        type: 'background',
+        fill: '#bbbbbb'
       },
       {
-        id: '1',
+        id: crypto.randomUUID(),
         align: 'center',
         type: 'text',
         x: 0,
@@ -57,6 +52,95 @@ export const CanvasEditor: FC<CanvasEditorProps> = ({
     ]
   }));
 
+  const setSelectedShape = useCallback((shapeId: string | undefined): void => {
+    setEditorState(prevEditorState => ({
+      ...prevEditorState,
+      selectedShapeId: shapeId
+    }));
+  }, []);
+
+  const handleStageClick = useCallback(
+    (e: KonvaEventObject<MouseEvent>) => {
+      if (e.target === e.target.getStage()) {
+        setSelectedShape(undefined);
+      }
+    },
+    [setSelectedShape]
+  );
+
+  const handleBackgroundClick = useCallback(
+    (e: KonvaEventObject<MouseEvent>) => {
+      console.log('handleBackgroundClick', { e });
+      setEditorState(prev => ({
+        ...prev,
+        selectedShapeId: undefined
+      }));
+    },
+    []
+  );
+
+  const handleNameUpdate: ChangeEventHandler<HTMLInputElement> = useCallback(
+    e => {
+      setEditorState(prevEditorState => ({
+        ...prevEditorState,
+        name: e.target.value
+      }));
+    },
+    []
+  );
+
+  const handleHeightUdpate: ChangeEventHandler<HTMLInputElement> = useCallback(
+    e => {
+      setEditorState(prevEditorState => ({
+        ...prevEditorState,
+        size: {
+          ...prevEditorState.size,
+          height: parseInt(e.target.value, 10)
+        }
+      }));
+    },
+    []
+  );
+
+  const handleWidthUdpate: ChangeEventHandler<HTMLInputElement> = useCallback(
+    e => {
+      setEditorState(prevEditorState => ({
+        ...prevEditorState,
+        size: {
+          ...prevEditorState.size,
+          width: parseInt(e.target.value, 10)
+        }
+      }));
+    },
+    []
+  );
+
+  const handleSave = () => {
+    const canvas = (stageRef.current as unknown as KStage)
+      .getStage()
+      .toCanvas();
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      drawWatermark(ctx, 'My generator', 20, 500, 500);
+      const data = canvas.toDataURL();
+      saveAs(data, `${editorState.name}.png`);
+    } else {
+      console.error('Could not create canvas context');
+    }
+  };
+
+  const isShapeSelected = useCallback(
+    (shape: EditorShape): boolean => editorState.selectedShapeId === shape.id,
+    [editorState]
+  );
+
+  const handleShapeSelect = useCallback(
+    (shape: EditorShape | undefined): void => {
+      setSelectedShape(shape?.id);
+    },
+    [setSelectedShape]
+  );
+
   const handleShapeUpdate = (newShape: EditorShape): void => {
     setEditorState(prevEditorState => ({
       ...prevEditorState,
@@ -69,77 +153,66 @@ export const CanvasEditor: FC<CanvasEditorProps> = ({
     }));
   };
 
-  const [name, setName] = useState('My canvas');
-  const [bgColor, setBgColor] = useState('#bbbbbb');
-  const [fontColor, setFontColor] = useState('#333333');
-  const [text, setText] = useState('Some Text');
-  const [fontFamily, setFontFamily] = useState('Arial');
-  const [fontSize, setFontSize] = useState(24);
-  const [align, setAlign] = useState('center');
-
-  const handleSave = () => {
-    const canvas = (stageRef.current as unknown as KStage)
-      .getStage()
-      .toCanvas();
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      drawWatermark(ctx, 'My generator', 20, 500, 500);
-      const data = canvas.toDataURL();
-      saveAs(data, `${name}.png`);
-    } else {
-      console.error('Could not create canvas context');
-    }
-  };
-
   return (
     <div className={styles.editor}>
       <div className={styles.controls}>
-        <Field label="Name" htmlFor="name">
+        <Field label="Name" htmlFor="canvasName">
           <input
-            id="name"
+            id="canvasName"
+            onChange={handleNameUpdate}
             type="text"
-            value={name}
-            onChange={e => setName(e.target.value)}
+            value={editorState.name}
           />
         </Field>
+        <Field label="Width" htmlFor="canvasWidth">
+          <input
+            type="number"
+            id="canvasWidth"
+            value={editorState.size.width}
+            onChange={handleWidthUdpate}
+          />
+        </Field>
+        <Field label="Height" htmlFor="canvasHeight">
+          <input
+            type="number"
+            id="canvasHeight"
+            value={editorState.size.height}
+            onChange={handleHeightUdpate}
+          />
+        </Field>
+
         <button type="button" disabled={!stageRef.current} onClick={handleSave}>
           📥 Save
         </button>
       </div>
-      <div className={styles.shapes}>
-        <CanvasShapesMenu
-          shapes={editorState.shapes}
-          onShapeUpdate={handleShapeUpdate}
-        />
-      </div>
-      <Stage
-        className={styles.stage}
-        width={editorState.width}
-        height={editorState.height}
-        ref={stageRef}
-      >
+      <div className={styles.menu}>
         {editorState.shapes.map(shape => (
-          <Layer key={shape.id}>
-            <CanvasShape shape={shape} />
-          </Layer>
+          <div className={styles.menu__item} key={shape.id}>
+            <CanvasShapeMenu shape={shape} onUpdate={handleShapeUpdate} />
+          </div>
         ))}
-
-        {/* <Layer>
-          <Rect fill={bgColor} x={0} y={0} width={500} height={500}></Rect>
-        </Layer>
-        <Layer>
-          <Text
-            wrap="word"
-            width={500}
-            text={text}
-            fill={fontColor}
-            fontSize={fontSize}
-            fontFamily={fontFamily}
-            align={align}
-            draggable
-          />
-        </Layer> */}
-      </Stage>
+      </div>
+      <div className={styles.stage}>
+        <Stage
+          width={editorState.size.width}
+          height={editorState.size.height}
+          ref={stageRef}
+          onClick={handleStageClick}
+        >
+          {editorState.shapes.map(shape => (
+            <Layer key={shape.id}>
+              <CanvasShape
+                shape={shape}
+                onBackgroundClick={handleBackgroundClick}
+                onUpdate={handleShapeUpdate}
+                isSelected={isShapeSelected(shape)}
+                onSelect={handleShapeSelect}
+                size={editorState.size}
+              />
+            </Layer>
+          ))}
+        </Stage>
+      </div>
     </div>
   );
 };

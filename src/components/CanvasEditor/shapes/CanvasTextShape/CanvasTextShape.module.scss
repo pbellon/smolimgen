@@ -1,0 +1,19 @@
+.holder {
+  pointer-events: none;
+  position: absolute;
+}
+
+.textarea {
+  pointer-events: none;
+  line-height: 1em;
+  resize: none;
+  appearance: none;
+  background: none;
+  border: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  padding: 0;
+}

@@ -10,28 +10,35 @@
 .editor {
   display: grid;
   grid-template-areas:
-    'a a a a'
-    'b c c c'
-    'b c c c';
+    'a a a'
+    'b c c'
+    'b c c';
   // grid-template-rows: 1fr minmax(1fr, max-content);
   align-items: center;
-  justify-content: center;
+  justify-content: stretch;
   row-gap: 1rem;
+  column-gap: 1rem;
 }
 
-.shapes {
+.menu {
   grid-area: b;
-  max-width: 500px;
+  align-self: self-start;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+
+  &__item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-small);
+    border-bottom: 1px solid var(--main-font-color);
+    padding: var(--spacing-small);
+  }
 }
 
 .stage {
   grid-area: c;
   display: flex;
   justify-content: center;
-}
-
-.font-family {
-  option[value] {
-    font-family: attr(value string);
-  }
 }
