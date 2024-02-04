@@ -1,3 +1,4 @@
+import cx from 'classnames';
 import { saveAs } from 'file-saver';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Stage as KStage } from 'konva/lib/Stage';
@@ -14,11 +15,17 @@ import { Layer, Stage } from 'react-konva/lib/ReactKonvaCore';
 import { Field } from '@components/Field';
 import { useLog } from '@hooks/useLog';
 import { capitalize } from '@utils/capitalize';
+import { swap } from '@utils/swap';
 
 import styles from './CanvasEditor.module.scss';
 import { CanvasShapeMenu } from './menu';
 import { CanvasShape } from './shapes/CanvasShape';
-import { CanvasEditorState, EditorShape, FontFamily } from './types';
+import {
+  CanvasEditorState,
+  EditorShape,
+  EditorShapeType,
+  FontFamily
+} from './types';
 import { addShape } from './utils/addShape';
 import { drawWatermark } from './utils/drawWatermark';
 
@@ -173,6 +180,43 @@ export const CanvasEditor: FC<CanvasEditorProps> = ({
     []
   );
 
+  const canMoveShapeUp = useCallback((index: number): boolean => index > 0, []);
+
+  const canMoveShapeDown = useCallback(
+    (index: number): boolean => index < editorState.shapes.length - 1,
+    [editorState.shapes]
+  );
+
+  const handleMoveShapeUp = useCallback(
+    (index: number) => () => {
+      setEditorState(prevEditorState => ({
+        ...prevEditorState,
+        shapes: swap(prevEditorState.shapes, index, index - 1)
+      }));
+    },
+    []
+  );
+
+  const handleMoveShapeDown = useCallback(
+    (index: number) => () => {
+      setEditorState(prevEditorState => ({
+        ...prevEditorState,
+        shapes: swap(prevEditorState.shapes, index, index + 1)
+      }));
+    },
+    []
+  );
+
+  const handleShapeRemove = useCallback(
+    (index: number) => () => {
+      setEditorState(prevEditorState => ({
+        ...prevEditorState,
+        shapes: prevEditorState.shapes.filter((_, tIndex) => tIndex !== index)
+      }));
+    },
+    []
+  );
+
   return (
     <div className={styles.editor}>
       <div className={styles.controls}>
@@ -206,24 +250,25 @@ export const CanvasEditor: FC<CanvasEditorProps> = ({
         </button>
       </div>
       <div className={styles.menu}>
-        {editorState.shapes.map(shape => (
-          <div className={styles.menu__item} key={shape.id}>
-            <CanvasShapeMenu shape={shape} onUpdate={handleShapeUpdate} />
-          </div>
+        {editorState.shapes.map((shape, index) => (
+          <CanvasShapeMenu
+            key={shape.id}
+            canMoveDown={canMoveShapeDown(index)}
+            canMoveUp={canMoveShapeUp(index)}
+            onMoveDown={handleMoveShapeDown(index)}
+            onMoveUp={handleMoveShapeUp(index)}
+            onRemove={handleShapeRemove(index)}
+            onUpdate={handleShapeUpdate}
+            shape={shape}
+          />
         ))}
         {/* New shape control */}
-        <div className={styles.menu__item}>
-          {(['text', 'rect', 'background'] as EditorShape['type'][]).map(
-            type => (
-              <button
-                key={type}
-                type="button"
-                onClick={handleCreateShape(type)}
-              >
-                Create new <code>{capitalize(type)}</code> shape
-              </button>
-            )
-          )}
+        <div className={cx(styles.menu__item, styles.menu__footer)}>
+          {(['text', 'rect', 'background'] as EditorShapeType[]).map(type => (
+            <button key={type} type="button" onClick={handleCreateShape(type)}>
+              Create new {capitalize(type)} shape
+            </button>
+          ))}
         </div>
       </div>
       <div className={styles.stage}>

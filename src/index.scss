@@ -7,6 +7,8 @@
   --border-radius: 0.2rem;
   --border-color-active: var(--accent-color);
 
+  --spacing-micro: 0.33rem;
+  --spacing-tiny: 0.5rem;
   --spacing-small: 0.7rem;
   --spacing-medium: 1rem;
 }
@@ -24,6 +26,11 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
 }
 
 a {
@@ -45,18 +52,21 @@ button {
   background-color: #1a1a1a;
   border-radius: 8px;
   border: 1px solid transparent;
-  cursor: pointer;
   font-family: inherit;
   font-size: 1rem;
   font-weight: 500;
   padding: 0.6rem 1.2rem;
   transition: border-color 0.25s;
 
-  &:hover,
-  &:focus,
-  &:focus-visible {
-    outline: none;
-    border-color: var(--border-color-active);
+  &:not([disabled]) {
+    cursor: pointer;
+
+    &:hover,
+    &:focus,
+    &:focus-visible {
+      outline: none;
+      border-color: var(--border-color-active);
+    }
   }
 }
 
