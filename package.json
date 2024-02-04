@@ -17,6 +17,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@uidotdev/usehooks": "^2.4.1",
     "file-saver": "^2.0.5",
     "konva": "^9.3.2",
     "react": "^18.2.0",

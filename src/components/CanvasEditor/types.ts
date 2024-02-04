@@ -20,7 +20,7 @@ export type TextShape = BaseShape<'text'> & {
 } & ResizableShapeProps;
 
 export type ImageShape = BaseShape<'image'> & {
-  image: CanvasImageSource;
+  image: CanvasImageSource | undefined;
 } & ResizableShapeProps;
 
 export type RectShape = BaseShape<'rect'> & {

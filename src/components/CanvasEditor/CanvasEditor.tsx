@@ -1,15 +1,25 @@
 import { saveAs } from 'file-saver';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Stage as KStage } from 'konva/lib/Stage';
-import { ChangeEventHandler, FC, useCallback, useRef, useState } from 'react';
+import {
+  ChangeEventHandler,
+  FC,
+  MouseEventHandler,
+  useCallback,
+  useRef,
+  useState
+} from 'react';
 import { Layer, Stage } from 'react-konva/lib/ReactKonvaCore';
 
 import { Field } from '@components/Field';
+import { useLog } from '@hooks/useLog';
+import { capitalize } from '@utils/capitalize';
 
 import styles from './CanvasEditor.module.scss';
 import { CanvasShapeMenu } from './menu';
 import { CanvasShape } from './shapes/CanvasShape';
 import { CanvasEditorState, EditorShape, FontFamily } from './types';
+import { addShape } from './utils/addShape';
 import { drawWatermark } from './utils/drawWatermark';
 
 type CanvasEditorProps = {
@@ -40,10 +50,10 @@ export const CanvasEditor: FC<CanvasEditorProps> = ({
         id: crypto.randomUUID(),
         align: 'center',
         type: 'text',
-        x: 0,
-        y: 0,
-        width,
-        height,
+        x: 10,
+        y: 10,
+        width: 400,
+        height: 30,
         text: 'Some Text',
         fontFamily: FontFamily.ARIAL,
         fontSize: 24,
@@ -51,6 +61,8 @@ export const CanvasEditor: FC<CanvasEditorProps> = ({
       }
     ]
   }));
+
+  useLog('CanvasEditor', editorState);
 
   const setSelectedShape = useCallback((shapeId: string | undefined): void => {
     setEditorState(prevEditorState => ({
@@ -153,6 +165,14 @@ export const CanvasEditor: FC<CanvasEditorProps> = ({
     }));
   };
 
+  const handleCreateShape = useCallback(
+    (type: EditorShape['type']): MouseEventHandler<Element> =>
+      () => {
+        setEditorState(prevEditorState => addShape(prevEditorState, type));
+      },
+    []
+  );
+
   return (
     <div className={styles.editor}>
       <div className={styles.controls}>
@@ -191,6 +211,20 @@ export const CanvasEditor: FC<CanvasEditorProps> = ({
             <CanvasShapeMenu shape={shape} onUpdate={handleShapeUpdate} />
           </div>
         ))}
+        {/* New shape control */}
+        <div className={styles.menu__item}>
+          {(['text', 'rect', 'background'] as EditorShape['type'][]).map(
+            type => (
+              <button
+                key={type}
+                type="button"
+                onClick={handleCreateShape(type)}
+              >
+                Create new <code>{capitalize(type)}</code> shape
+              </button>
+            )
+          )}
+        </div>
       </div>
       <div className={styles.stage}>
         <Stage
